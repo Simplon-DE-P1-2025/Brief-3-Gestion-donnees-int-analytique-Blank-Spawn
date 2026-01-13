@@ -14,6 +14,7 @@ OperationsSchema = DataFrameSchema({
 
     # Colonnes texte
     "type_operation": Column(pa.String, nullable=True),
+    "pourquoi_alerte": Column(pa.String, nullable=True),
     "moyen_alerte": Column(pa.String, nullable=True),
     "qui_alerte": Column(pa.String, nullable=True),
     "categorie_qui_alerte": Column(pa.String, nullable=True),
@@ -22,6 +23,7 @@ OperationsSchema = DataFrameSchema({
     "evenement": Column(pa.String, nullable=True),
     "categorie_evenement": Column(pa.String, nullable=True),
     "autorite": Column(pa.String, nullable=True),
+    "seconde_autorite": Column(pa.String, nullable=True),
     "zone_responsabilite": Column(pa.String, nullable=True),
     "vent_direction_categorie": Column(pa.String, nullable=True),
     "cross_sitrep": Column(pa.String, nullable=True),
