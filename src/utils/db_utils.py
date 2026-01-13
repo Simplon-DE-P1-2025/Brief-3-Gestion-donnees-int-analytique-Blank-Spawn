@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -33,11 +34,6 @@ def get_engine(echo: bool = False) -> Engine:
     )
 
     return create_engine(database_url, echo=echo)
-
-
-import pandas as pd
-from sqlalchemy import text
-from sqlalchemy.engine import Engine
 
 
 def insert_dataframe(

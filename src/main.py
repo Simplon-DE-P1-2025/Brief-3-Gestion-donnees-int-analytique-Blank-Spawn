@@ -4,6 +4,7 @@ from pandera.errors import SchemaError, SchemaErrors
 import logging
 import os
 from schemas.schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
+from utils.db_utils import get_engine, insert_dataframe
 
 # ============================
 # 1. Chargement des données brutes
@@ -171,16 +172,28 @@ if __name__ == "__main__":
 
     # Check intégrité Pandera avec nom de schéma
     schema_mapping = {
-        "operations": (ops_clean, OperationsSchema),
+        "operations": (ops_clean, OperationsSchema, "operation"),
         "flotteurs": (
             pd.read_csv("data/flotteurs_clean.csv"),
-            FlotteursSchema
+            FlotteursSchema,
+            "flotteurs"
         ),
         "resultats_humain": (
             pd.read_csv("data/resultats_humain_clean.csv"),
-            ResultatsHumainSchema
+            ResultatsHumainSchema,
+            "resultats_humain"
         )
     }
 
-    for name, (df, schema) in schema_mapping.items():
+    supa_engine = get_engine()
+
+    for name, (df, schema, table_name) in schema_mapping.items():
         df_valid = validate_df(df, schema=schema, schema_name=name)
+    
+        # Chargement en base de données
+        insert_dataframe(
+            df,
+            table_name,
+            supa_engine,
+            schema=schema
+        )
