@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS operation (
     moyen_alerte VARCHAR(50),
     qui_alerte VARCHAR(50),
     categorie_qui_alerte VARCHAR(50),
-    cross VARCHAR(50),
+    cross_type VARCHAR(50),
     departement VARCHAR(50),
     est_metropolitain BOOLEAN,
     evenement VARCHAR(50),
