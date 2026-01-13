@@ -1,5 +1,7 @@
 import pandas as pd
-import pandera
+import pandera as pa
+from pandera.errors import SchemaError, SchemaErrors
+import logging
 import os
 from schemas.schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
 
@@ -113,28 +115,21 @@ def save_clean_data(ops, flot, res):
 # 6. Validation des dataframes
 # ============================
 
-import pandera as pa
-from pandera.errors import SchemaError, SchemaErrors
-import logging
-
-# ---------------------------
-# Fonctions de validation
-# ---------------------------
-
-def validate_operations(df: pd.DataFrame, schema_name: str = "Unknown") -> pd.DataFrame:
+def validate_df(
+    df: pd.DataFrame,
+    schema,
+    schema_name: str
+) -> pd.DataFrame:
     try:
-        # lazy=False = fail-fast, lazy=True = collecte toutes les erreurs
-        return OperationsSchema.validate(df, lazy=False)
-    except (SchemaError, SchemaErrors) as e:
-        # On ajoute le nom du schéma pour savoir lequel a échoué
-        logging.error(f"Validation échouée pour le schéma '{schema_name}'")
-        if hasattr(e, "failure_cases"):
-            # si lazy=True, on a un DataFrame détaillé des échecs
-            logging.error(e.failure_cases)
-        else:
-            logging.error(str(e))
-        # on remonte l'erreur avec un message clair
-        raise RuntimeError(f"Validation Pandera échouée pour le schéma '{schema_name}'") from e
+        return schema.validate(df, lazy=True)
+    except SchemaErrors as e:
+        logging.error(f"❌ Validation échouée pour le schéma : {schema_name}")
+        logging.error("➡️ Détails des erreurs Pandera :")
+        logging.error(e.failure_cases)
+
+        raise RuntimeError(
+            f"Validation Pandera échouée pour le schéma '{schema_name}'"
+        ) from e
 
 
 # ============================
@@ -152,12 +147,19 @@ if __name__ == "__main__":
     
     # Check intégrité Pandera avec nom de schéma
     schema_mapping = {
-        "operations": ops,
-        "flotteurs": flot,
-        "resultats_humain": res
+        "operations": (
+            pd.read_csv("data/operations_clean.csv"),
+            OperationsSchema
+        ),
+        "flotteurs": (
+            pd.read_csv("data/flotteurs_clean.csv"),
+            FlotteursSchema
+        ),
+        "resultats_humain": (
+            pd.read_csv("data/resultats_humain_clean.csv"),
+            ResultatsHumainSchema
+        )
     }
 
-    for name, df in schema_mapping.items():
-        df_valid = validate_operations(df, schema_name=name)
-        # si on arrive ici => validation OK
-
+    for name, (df, schema) in schema_mapping.items():
+        df_valid = validate_df(df, schema=schema, schema_name=name)
