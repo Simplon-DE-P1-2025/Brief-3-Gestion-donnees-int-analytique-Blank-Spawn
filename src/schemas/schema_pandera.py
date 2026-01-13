@@ -36,7 +36,7 @@ OperationsSchema = DataFrameSchema({
     "date_heure_reception_alerte": pa.Column(pa.DateTime, nullable=True),
     "date_heure_fin_operation": pa.Column(pa.DateTime, nullable=True),
 
-    "numero_sitrep": pa.Column(pa.String, nullable=True),
+    "numero_sitrep": pa.Column(pa.Int, nullable=True),
 })
 
 

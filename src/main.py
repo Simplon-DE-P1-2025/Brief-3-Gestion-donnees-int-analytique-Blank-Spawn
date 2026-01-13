@@ -141,6 +141,7 @@ if __name__ == "__main__":
     ops, flot, res = load_raw_data()
 
     # Nettoyage
+    ops = clean_resultats(ops)
     flot = clean_flotteurs(flot)
     res = clean_resultats(res)
     save_clean_data(ops, flot, res)
