@@ -1,6 +1,7 @@
 import pandas as pd
+import pandera
 import os
-from schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
+from schemas.schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
 
 # ============================
 # 1. Chargement des données brutes
@@ -109,12 +110,54 @@ def save_clean_data(ops, flot, res):
 
 
 # ============================
-# 6. Pipeline principal
+# 6. Validation des dataframes
+# ============================
+
+import pandera as pa
+from pandera.errors import SchemaError, SchemaErrors
+import logging
+
+# ---------------------------
+# Fonctions de validation
+# ---------------------------
+
+def validate_operations(df: pd.DataFrame, schema_name: str = "Unknown") -> pd.DataFrame:
+    try:
+        # lazy=False = fail-fast, lazy=True = collecte toutes les erreurs
+        return OperationsSchema.validate(df, lazy=False)
+    except (SchemaError, SchemaErrors) as e:
+        # On ajoute le nom du schéma pour savoir lequel a échoué
+        logging.error(f"Validation échouée pour le schéma '{schema_name}'")
+        if hasattr(e, "failure_cases"):
+            # si lazy=True, on a un DataFrame détaillé des échecs
+            logging.error(e.failure_cases)
+        else:
+            logging.error(str(e))
+        # on remonte l'erreur avec un message clair
+        raise RuntimeError(f"Validation Pandera échouée pour le schéma '{schema_name}'") from e
+
+
+# ============================
+# Pipeline principal
 # ============================
 
 if __name__ == "__main__":
+    # Extraction des données
     ops, flot, res = load_raw_data()
-    ops = clean_operations(ops)
+
+    # Nettoyage
     flot = clean_flotteurs(flot)
     res = clean_resultats(res)
     save_clean_data(ops, flot, res)
+    
+    # Check intégrité Pandera avec nom de schéma
+    schema_mapping = {
+        "operations": ops,
+        "flotteurs": flot,
+        "resultats_humain": res
+    }
+
+    for name, df in schema_mapping.items():
+        df_valid = validate_operations(df, schema_name=name)
+        # si on arrive ici => validation OK
+
