@@ -24,7 +24,7 @@ operations_dtypes = {
     "vent_direction": float,
     "vent_force": float,
     "mer_force": float,
-    "numero_sitrep": "Int64",  # nullable int
+    "numero_sitrep": str
 }
 
 # -----------------------------
