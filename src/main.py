@@ -129,10 +129,18 @@ def validate_df(
 ) -> pd.DataFrame:
     try:
         return schema.validate(df, lazy=True)
+
     except SchemaErrors as e:
         logging.error(f"❌ Validation échouée pour le schéma : {schema_name}")
         logging.error("➡️ Détails des erreurs Pandera :")
-        logging.error(e.failure_cases)
+
+        # Pandera may expose different attributes depending on version
+        if hasattr(e, "failure_cases"):
+            logging.error(e.failure_cases)
+        elif hasattr(e, "schema_errors"):
+            logging.error(e.schema_errors)
+        else:
+            logging.error(str(e))
 
         raise RuntimeError(
             f"Validation Pandera échouée pour le schéma '{schema_name}'"
