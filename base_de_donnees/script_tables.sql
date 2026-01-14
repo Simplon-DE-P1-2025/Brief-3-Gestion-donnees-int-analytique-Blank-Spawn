@@ -10,7 +10,7 @@
 -- Table : operation
 -- =====================================================
 CREATE TABLE IF NOT EXISTS operation (
-    operation_id INTEGER PRIMARY KEY,
+    operation_id VARCHAR(50) PRIMARY KEY,
     type_operation VARCHAR(5),
     pourquoi_alerte VARCHAR(50),
     moyen_alerte VARCHAR(50),
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS operation (
     mer_force INTEGER CHECK (mer_force BETWEEN 0 AND 9),
     date_heure_reception_alerte TIMESTAMP,
     date_heure_fin_operation TIMESTAMP,
-    numero_sitrep INTEGER,
+    numero_sitrep VARCHAR(50),
     cross_sitrep VARCHAR(50),
     fuseau_horaire VARCHAR(50),
     systeme_source VARCHAR(50)
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS operation (
 -- Table : flotteurs
 -- =====================================================
 CREATE TABLE IF NOT EXISTS flotteurs (
-    operation_id INTEGER NOT NULL,
+    operation_id VARCHAR(50) NOT NULL,
     numero_ordre INTEGER,
     pavillon VARCHAR(10),
     resultat_flotteur VARCHAR(50),
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS flotteurs (
 -- Table : resultats_humain
 -- =====================================================
 CREATE TABLE IF NOT EXISTS resultats_humain (
-    operation_id INTEGER NOT NULL,
+    operation_id VARCHAR(50) NOT NULL,
     categorie_personne VARCHAR(100),
     resultat_humain VARCHAR(70),
     nombre INTEGER,
