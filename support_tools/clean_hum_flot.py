@@ -4,7 +4,7 @@ import os
 # Resolve project root and data directory relative to this script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
-DATA_DIR = os.path.join(PROJECT_ROOT, "src", "data")
+DATA_DIR = os.path.join(PROJECT_ROOT, "pipeline", "data")
 
 # ============================================================
 # Préparation du dossier de sortie

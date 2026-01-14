@@ -1,6 +1,6 @@
-from schemas.schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
-from utils.data_types import operations_dtypes, flotteurs_dtypes, resultats_humain_dtypes
-from utils.db_utils import get_engine, insert_dataframe
+from pipeline.schemas.schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
+from pipeline.utils.data_types import operations_dtypes, flotteurs_dtypes, resultats_humain_dtypes
+from pipeline.utils.db_utils import get_engine, insert_dataframe
 from pandera.errors import SchemaErrors
 import pandera as pa
 import pandas as pd
