@@ -21,6 +21,10 @@ from src.main import (
     validate_df,
 )
 
+import inspect
+import textwrap
+import src.main as main_mod
+
 
 def test_load_raw_data_reads_three_files():
     mock_df = pd.DataFrame({"col": [1, 2, 3]})
@@ -108,3 +112,116 @@ def test_validate_df_success_and_failure():
         with pytest.raises(RuntimeError):
             validate_df(df, mock_schema_fail, "test_schema")
         assert mock_log_error.called
+
+
+# --- from tests/test_main_extra.py: tests for additional validate_df branches
+def _make_schema_error_with_attr(attr_name, value):
+    err = SchemaErrors.__new__(SchemaErrors)
+    setattr(err, attr_name, value)
+    return err
+
+
+def test_validate_df_logs_failure_cases_branch():
+    df = pd.DataFrame({"a": [1]})
+    mock_schema = MagicMock()
+
+    err = _make_schema_error_with_attr("failure_cases", pd.DataFrame({"col": ["fc"]}))
+    mock_schema.validate.side_effect = err
+
+    with patch("logging.error") as mock_log:
+        with pytest.raises(RuntimeError):
+            validate_df(df, mock_schema, "ops")
+
+        # should log multiple times and include a DataFrame object (failure_cases)
+        assert mock_log.call_count >= 3
+        assert any(isinstance(call.args[0], pd.DataFrame) for call in mock_log.call_args_list)
+
+
+def test_validate_df_logs_str_when_no_failure_attrs():
+    df = pd.DataFrame({"a": [1]})
+    mock_schema = MagicMock()
+
+    # SchemaErrors instance with no failure_cases/schema_errors attributes
+    err = SchemaErrors.__new__(SchemaErrors)
+    # ensure __str__ on SchemaErrors won't raise (it expects a .message attribute)
+    err.message = "synthetic schema error"
+    mock_schema.validate.side_effect = err
+
+    with patch("logging.error") as mock_log:
+        with pytest.raises(RuntimeError):
+            validate_df(df, mock_schema, "ops")
+
+        # should log at least the header messages and a string representation of the exception
+        assert mock_log.call_count >= 3
+        assert any(isinstance(call.args[0], str) for call in mock_log.call_args_list)
+
+
+# --- from tests/test_main_run_module.py: integration-like test running module main
+def test_run_module_main_executes_pipeline():
+    # small dataframes matching minimal expected columns
+    ops = pd.DataFrame({
+        "date_heure_reception_alerte": ["2023-01-01T00:00:00Z"],
+        "date_heure_fin_operation": ["2023-01-02T00:00:00Z"],
+        "latitude": [45.0],
+        "longitude": [2.0],
+    })
+
+    flot = pd.DataFrame({"numero_ordre": [1], "pavillon": ["FR"]})
+    res = pd.DataFrame({"resultat_flotteur": ["ok"]})
+
+    def fake_read_csv(path, *args, **kwargs):
+        if "operations_clean.csv" in str(path):
+            return ops
+        if "flotteurs_clean.csv" in str(path):
+            return flot
+        if "resultats_humain_clean.csv" in str(path):
+            return res
+        return pd.DataFrame()
+
+    # Read the source and extract the __main__ block
+    src_path = main_mod.__file__
+    with open(src_path, "r", encoding="utf8") as f:
+        lines = f.read().splitlines()
+
+    idx_if = next(i for i, ln in enumerate(lines) if ln.strip().startswith('if __name__') )
+    body_lines = lines[idx_if + 1 :]
+    body = textwrap.dedent("\n".join(body_lines))
+    body_start_line = idx_if + 2
+
+    # Prefix newlines so compiled code maps to the original file line numbers
+    prefix = "\n" * (body_start_line - 1)
+    exec_src = prefix + body
+
+    # Prepare globals for execution of the main block
+    g = {
+        "__name__": "__main__",
+        "load_raw_data": lambda: (ops, flot, res),
+        "clean_operations": main_mod.clean_operations,
+        "clean_flotteurs": main_mod.clean_flotteurs,
+        "clean_resultats": main_mod.clean_resultats,
+        "save_clean_data": lambda a, b, c: None,
+        "pd": pd,
+        "os": main_mod.os,
+        "operations_dtypes": {},
+        "flotteurs_dtypes": {},
+        "resultats_humain_dtypes": {},
+        "OperationsSchema": object,
+        "FlotteursSchema": object,
+        "ResultatsHumainSchema": object,
+        "get_engine": lambda: MagicMock(),
+        "insert_dataframe": lambda df, table_name, engine: g.setdefault("_insert_calls", []).append(table_name),
+        "validate_df": lambda df, schema, schema_name: df,
+    }
+
+    # ensure pd.read_csv used in the exec uses our fake
+    g["pd"].read_csv = fake_read_csv
+
+    # compile with filename set to the real module so coverage attributes lines correctly
+    code_obj = compile(exec_src, src_path, "exec")
+    exec(code_obj, g, g)
+
+    # verify insert_dataframe was called for expected tables
+    called = g.get("_insert_calls", [])
+    assert "operation" in called
+    assert "flotteurs" in called
+    assert "resultats_humain" in called
