@@ -43,7 +43,7 @@ OperationsSchema = DataFrameSchema({
         nullable=True
     ),
 
-    "numero_sitrep": pa.Column(pa.Int, nullable=True),
+    "numero_sitrep": pa.Column(pa.String, nullable=True),
 })
 
 
