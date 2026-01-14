@@ -16,7 +16,7 @@ OperationsSchema = DataFrameSchema({
     "moyen_alerte": pa.Column(pa.String, nullable=True),
     "qui_alerte": pa.Column(pa.String, nullable=True),
     "categorie_qui_alerte": pa.Column(pa.String, nullable=True),
-    "cross": pa.Column(pa.String, nullable=True),
+    "cross_type": pa.Column(pa.String, nullable=True),
     "departement": pa.Column(pa.String, nullable=True),
     "evenement": pa.Column(pa.String, nullable=True),
     "categorie_evenement": pa.Column(pa.String, nullable=True),
@@ -79,4 +79,3 @@ ResultatsHumainSchema = DataFrameSchema({
     "dont_nombre_blesse": pa.Column(int, nullable=True),
 
 })
-

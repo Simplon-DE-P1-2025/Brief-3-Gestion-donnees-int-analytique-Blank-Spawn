@@ -1,8 +1,9 @@
-import os
-import pandas as pd
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
+from dotenv import load_dotenv
+from datetime import time
+import pandas as pd
+
 
 def get_engine(echo: bool = False):
     import os
@@ -47,7 +48,7 @@ def insert_dataframe(
         if_exists="append",
         index=False,
         method="multi",
-        chunksize=500
+        chunksize=50
     )
 
     engine.dispose() # close connections after done

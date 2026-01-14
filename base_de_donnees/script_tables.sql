@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS operation (
     mer_force INTEGER CHECK (mer_force BETWEEN 0 AND 9),
     date_heure_reception_alerte TIMESTAMP,
     date_heure_fin_operation TIMESTAMP,
-    numero_sitrep INTEGER CHECK (numero_sitrep >= 1),
+    numero_sitrep INTEGER,
     cross_sitrep VARCHAR(50),
     fuseau_horaire VARCHAR(50),
     systeme_source VARCHAR(50)
