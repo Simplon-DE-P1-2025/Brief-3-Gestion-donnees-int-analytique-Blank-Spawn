@@ -7,12 +7,12 @@ import pytest
 
 # ensure project root and src are on path so imports in src.main (and top-level packages) resolve
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SRC_PATH = os.path.join(PROJECT_ROOT, "src")
+PIPELINE_PATH = os.path.join(PROJECT_ROOT, "pipeline")
 sys.path.insert(0, PROJECT_ROOT)
-if os.path.isdir(SRC_PATH):
-    sys.path.insert(0, SRC_PATH)
+if os.path.isdir(PIPELINE_PATH):
+    sys.path.insert(0, PIPELINE_PATH)
 
-from src.main import (
+from pipeline.main import (
     load_raw_data,
     clean_operations,
     clean_flotteurs,
@@ -23,7 +23,7 @@ from src.main import (
 
 import inspect
 import textwrap
-import src.main as main_mod
+import pipeline.main as main_mod
 
 
 def test_load_raw_data_reads_three_files():
