@@ -38,13 +38,17 @@ print(" Connexion établie\n")
 def copy_csv_to_table(csv_path: str, table_name: str):
     print(f" Import de {csv_path} → table {table_name}...")
 
-    with conn.cursor() as cur:  # on ne ferme plus la connexion ici
-        with open(csv_path, "r") as f:
-            cur.copy(f"COPY {table_name} FROM STDIN WITH CSV HEADER", f)
+    try:
+        with conn.cursor() as cur:
+            with open(csv_path, "r") as f:
+                cur.copy(f"COPY {table_name} FROM STDIN WITH CSV HEADER", f)
 
-    conn.commit()  # commit manuel après chaque import
+        conn.commit()
+        print(f" Import terminé pour {table_name}\n")
 
-    print(f" Import terminé pour {table_name}\n")
+    except Exception as e:
+        print(f"❌ ERREUR COPY pour la table {table_name} : {e}\n")
+        conn.rollback()
 
 
 # ============================================================
@@ -79,20 +83,12 @@ copy_csv_to_table(ops_ready_path, "operation")
 
 print("=== 2. Import de la table flotteurs ===")
 
-flotteurs_path = "data/flotteurs_clean.csv"
+flotteurs_ready_path = "csv_clean2/flotteurs_ready.csv"
 
-flotteurs = pd.read_csv(flotteurs_path)
-required_cols_flotteurs = [
-    "operation_id", "numero_ordre", "pavillon",
-    "resultat_flotteur", "type_flotteur",
-    "categorie_flotteur", "numero_immatriculation"
-]
+if not os.path.exists(flotteurs_ready_path):
+    raise RuntimeError(" Le fichier flotteurs_ready.csv est introuvable. Lance clean_hum_flot.py")
 
-missing = [c for c in required_cols_flotteurs if c not in flotteurs.columns]
-if missing:
-    raise RuntimeError(f" Colonnes manquantes dans flotteurs_clean.csv : {missing}")
-
-copy_csv_to_table(flotteurs_path, "flotteurs")
+copy_csv_to_table(flotteurs_ready_path, "flotteurs")
 
 
 # ============================================================
@@ -101,19 +97,12 @@ copy_csv_to_table(flotteurs_path, "flotteurs")
 
 print("=== 3. Import de la table resultats_humain ===")
 
-resultats_path = "data/resultats_humain_clean.csv"
+resultats_ready_path = "csv_clean2/resultats_humain_ready.csv"
 
-resultats = pd.read_csv(resultats_path)
-required_cols_resultats = [
-    "operation_id", "categorie_personne",
-    "resultat_humain", "nombre", "dont_nombre_blesse"
-]
+if not os.path.exists(resultats_ready_path):
+    raise RuntimeError(" Le fichier resultats_humain_ready.csv est introuvable. Lance clean_hum_flot.py")
 
-missing = [c for c in required_cols_resultats if c not in resultats.columns]
-if missing:
-    raise RuntimeError(f" Colonnes manquantes dans resultats_humain_clean.csv : {missing}")
-
-copy_csv_to_table(resultats_path, "resultats_humain")
+copy_csv_to_table(resultats_ready_path, "resultats_humain")
 
 
 # ============================================================
