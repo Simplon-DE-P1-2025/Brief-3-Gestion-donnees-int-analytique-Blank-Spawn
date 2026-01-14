@@ -26,8 +26,8 @@ statements = [s.strip() for s in sql_script.split(";") if s.strip()]
 
 with conn.cursor() as cur:
     for stmt in statements:
-        print(f"➡️ Exécution : {stmt[:50]}...")
+        print(f" Exécution : {stmt[:50]}...")
         cur.execute(stmt + ";")
     conn.commit()
 
-print("🎉 Script SQL exécuté avec succès !")
+print(" Script SQL exécuté avec succès !")
