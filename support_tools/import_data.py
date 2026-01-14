@@ -57,7 +57,7 @@ def copy_csv_to_table(csv_path: str, table_name: str):
 
 print("=== 1. Préparation du fichier operations ===")
 
-ops = pd.read_csv("data/operations_clean.csv")
+ops = pd.read_csv("pipeline/data/operations_clean.csv")
 
 # Vérification colonne cross
 if "cross" not in ops.columns:
@@ -71,7 +71,7 @@ if "est_metropolitain" not in ops.columns:
     ops["est_metropolitain"] = True  # valeur par défaut
 
 # Sauvegarde du fichier prêt pour COPY
-ops_ready_path = "data/operations_ready.csv"
+ops_ready_path = "pipeline/data/operations_ready.csv"
 ops.to_csv(ops_ready_path, index=False)
 
 copy_csv_to_table(ops_ready_path, "operation")

@@ -38,6 +38,6 @@ def check_structure(raw_path, clean_path, table_name):
 
 
 if __name__ == "__main__":
-    check_structure("data/operations.csv", "data/operations_clean.csv", "operations")
-    check_structure("data/flotteurs.csv", "data/flotteurs_clean.csv", "flotteurs")
-    check_structure("data/resultats_humain.csv", "data/resultats_humain_clean.csv", "resultats_humain")
+    check_structure("pipeline/data/operations.csv", "pipeline/data/operations_clean.csv", "operations")
+    check_structure("pipeline/data/flotteurs.csv", "pipeline/data/flotteurs_clean.csv", "flotteurs")
+    check_structure("pipeline/data/resultats_humain.csv", "pipeline/data/resultats_humain_clean.csv", "resultats_humain")

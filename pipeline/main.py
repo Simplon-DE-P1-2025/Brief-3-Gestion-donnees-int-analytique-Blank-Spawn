@@ -12,9 +12,9 @@ import os
 # ============================
 
 def load_raw_data():
-    operations = pd.read_csv("data/operations.csv")
-    flotteurs = pd.read_csv("data/flotteurs.csv")
-    resultats = pd.read_csv("data/resultats_humain.csv")
+    operations = pd.read_csv("pipeline/data/operations.csv")
+    flotteurs = pd.read_csv("pipeline/data/flotteurs.csv")
+    resultats = pd.read_csv("pipeline/data/resultats_humain.csv")
     return operations, flotteurs, resultats
 
 
@@ -108,14 +108,13 @@ def clean_resultats(df):
 # ============================
 
 def save_clean_data(ops, flot, res):
+    os.makedirs("pipeline/data", exist_ok=True)
 
-    os.makedirs("data", exist_ok=True)
+    ops.to_csv("pipeline/data/operations_clean.csv", index=False)
+    flot.to_csv("pipeline/data/flotteurs_clean.csv", index=False)
+    res.to_csv("pipeline/data/resultats_humain_clean.csv", index=False)
 
-    ops.to_csv("data/operations_clean.csv", index=False)
-    flot.to_csv("data/flotteurs_clean.csv", index=False)
-    res.to_csv("data/resultats_humain_clean.csv", index=False)
-
-    print("✔ Données nettoyées enregistrées dans data/")
+    print("✔ Données nettoyées enregistrées dans pipeline/data/")
 
 
 # ============================
@@ -168,7 +167,7 @@ if __name__ == "__main__":
     ]
 
     ops_clean = pd.read_csv(
-        "data/operations_clean.csv",
+        "pipeline/data/operations_clean.csv",
         dtype=operations_dtypes,
         parse_dates=date_cols_ops,
         date_parser=lambda col: pd.to_datetime(col, utc=True)
@@ -195,7 +194,7 @@ if __name__ == "__main__":
         "operations": (ops_clean, OperationsSchema, "operation"),
         "flotteurs": (
             pd.read_csv(
-                "data/flotteurs_clean.csv",
+                "pipeline/data/flotteurs_clean.csv",
                 dtype=flotteurs_dtypes
             ),
             FlotteursSchema,
@@ -203,7 +202,7 @@ if __name__ == "__main__":
         ),
         "resultats_humain": (
             pd.read_csv(
-                "data/resultats_humain_clean.csv",
+                "pipeline/data/resultats_humain_clean.csv",
                 dtype=resultats_humain_dtypes
             ),
             ResultatsHumainSchema,

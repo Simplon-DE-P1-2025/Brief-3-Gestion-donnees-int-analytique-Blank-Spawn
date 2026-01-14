@@ -1,14 +1,20 @@
 import pandas as pd
 import os
 
+# Resolve project root and data directory relative to this script
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
+DATA_DIR = os.path.join(PROJECT_ROOT, "src", "data")
+
 # ============================================================
 # Préparation du dossier de sortie
 # ============================================================
 
-OUTPUT_DIR = "csv_clean2"
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "csv_clean2")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 print(f"📁 Dossier de sortie : {OUTPUT_DIR}\n")
+print(f"📁 Dossier de données : {DATA_DIR}\n")
 
 
 # ============================================================
@@ -17,7 +23,7 @@ print(f"📁 Dossier de sortie : {OUTPUT_DIR}\n")
 
 print("=== Nettoyage flotteurs ===")
 
-df_flotteurs = pd.read_csv("data/flotteurs_clean.csv")
+df_flotteurs = pd.read_csv(os.path.join(DATA_DIR, "flotteurs_clean.csv"))
 
 cols_flotteurs = [
     "operation_id", "numero_ordre", "pavillon",
@@ -50,7 +56,7 @@ print(f"→ {flotteurs_ready_path} généré\n")
 
 print("=== Nettoyage resultats_humain ===")
 
-df_res = pd.read_csv("data/resultats_humain_clean.csv")
+df_res = pd.read_csv(os.path.join(DATA_DIR, "resultats_humain_clean.csv"))
 
 cols_res = [
     "operation_id", "categorie_personne",

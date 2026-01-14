@@ -87,7 +87,7 @@ def test_save_clean_data_calls_makedirs_and_to_csv():
     with patch("os.makedirs") as mock_makedirs, patch.object(pd.DataFrame, "to_csv") as mock_to_csv:
         with patch("builtins.print"):
             save_clean_data(ops, flot, res)
-        mock_makedirs.assert_called_with("data", exist_ok=True)
+        mock_makedirs.assert_called_with("pipeline/data", exist_ok=True)
         assert mock_to_csv.call_count == 3
 
 
