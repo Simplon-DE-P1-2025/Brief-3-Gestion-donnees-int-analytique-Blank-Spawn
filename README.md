@@ -31,6 +31,12 @@ Avant de lancer les tests, assurez-vous d'installer les dépendances :
 pip install -r requirements.txt
 ```
 
+### Activation de l'environnement virtuel
+Activez l'environnement virtuel Python :
+```bash
+source .venv/bin/activate
+```
+
 ### Fichiers d'environnement
 Le projet utilisant une base de données hébergée en ligne, nous utilisons des fichiers d'environnement pour stocker des variables nécessaires à la connexion en BDD.
 Un premier fichier `.env` à placer à la racine du projet:

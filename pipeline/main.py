@@ -1,11 +1,16 @@
+import pandas as pd
+import logging
+import os
+import sys
+
+# Add project root to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pipeline.schemas.schema_pandera import OperationsSchema, FlotteursSchema, ResultatsHumainSchema
 from pipeline.utils.data_types import operations_dtypes, flotteurs_dtypes, resultats_humain_dtypes
 from pipeline.utils.db_utils import get_engine, insert_dataframe
 from pandera.errors import SchemaErrors
 import pandera as pa
-import pandas as pd
-import logging
-import os
 
 # ============================
 # 1. Chargement des données brutes
@@ -216,8 +221,22 @@ if __name__ == "__main__":
         df_valid = validate_df(df, schema=schema, schema_name=name)
     
         # Chargement en base de données
+        if table_name == 'operation':
+            conflict_cols = ['operation_id']
+            conflict_constraint = None
+        elif table_name == 'flotteurs':
+            conflict_cols = ['operation_id', 'numero_ordre']
+            conflict_constraint = None
+        elif table_name == 'resultats_humain':
+            conflict_cols = None
+            conflict_constraint = 'resultats_humain_unique'
+        else:
+            conflict_cols = None
+            conflict_constraint = None
         insert_dataframe(
             df,
             table_name,
             supa_engine,
+            conflict_cols=conflict_cols,
+            conflict_constraint=conflict_constraint
         )

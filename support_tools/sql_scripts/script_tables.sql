@@ -1,16 +1,8 @@
 -- =====================================================
--- (Optionnel) Reset propre si besoin
--- Décommente seulement si tu veux tout recréer
--- =====================================================
--- DROP TABLE IF EXISTS flotteurs CASCADE;
--- DROP TABLE IF EXISTS resultats_humain CASCADE;
--- DROP TABLE IF EXISTS operation CASCADE;
-
--- =====================================================
 -- Table : operation
 -- =====================================================
 CREATE TABLE IF NOT EXISTS operation (
-    operation_id VARCHAR(50) PRIMARY KEY,
+    operation_id VARCHAR(50) PRIMARY KEY, -- operation_pkey
     type_operation VARCHAR(5),
     pourquoi_alerte VARCHAR(50),
     moyen_alerte VARCHAR(50),
@@ -39,9 +31,10 @@ CREATE TABLE IF NOT EXISTS operation (
 );
 
 -- =====================================================
--- Table : flotteurs
+-- Table : flotteurs (WITH unique ID)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS flotteurs (
+    flotteur_id BIGSERIAL PRIMARY KEY,
     operation_id VARCHAR(50) NOT NULL,
     numero_ordre INTEGER,
     pavillon VARCHAR(10),
@@ -50,6 +43,9 @@ CREATE TABLE IF NOT EXISTS flotteurs (
     categorie_flotteur VARCHAR(30),
     numero_immatriculation VARCHAR(60),
 
+    CONSTRAINT flotteurs_unique
+        UNIQUE (operation_id, numero_ordre),
+
     CONSTRAINT fk_flotteurs_operation
         FOREIGN KEY (operation_id)
         REFERENCES operation (operation_id)
@@ -57,14 +53,18 @@ CREATE TABLE IF NOT EXISTS flotteurs (
 );
 
 -- =====================================================
--- Table : resultats_humain
+-- Table : resultats_humain (WITH unique ID)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS resultats_humain (
+    resultat_id BIGSERIAL PRIMARY KEY,
     operation_id VARCHAR(50) NOT NULL,
     categorie_personne VARCHAR(100),
     resultat_humain VARCHAR(70),
     nombre INTEGER,
     dont_nombre_blesse INTEGER,
+
+    CONSTRAINT resultats_humain_unique
+        UNIQUE (operation_id, categorie_personne),
 
     CONSTRAINT fk_resultats_humain_operation
         FOREIGN KEY (operation_id)
