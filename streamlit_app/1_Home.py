@@ -1,5 +1,11 @@
 import streamlit as st
 
+from utils.auth_ui import render_auth_widget
+
+# Cela affiche le bouton "Déconnexion" si déjà connecté, 
+# ou le formulaire si ce n'est pas le cas.
+user = render_auth_widget()
+
 st.title("🏠 Accueil")
 
 st.write("""

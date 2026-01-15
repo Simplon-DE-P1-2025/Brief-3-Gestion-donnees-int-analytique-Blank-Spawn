@@ -4,6 +4,12 @@ import random
 from datetime import datetime
 from utils.db import fetch_data, insert_row, update_row, delete_row
 
+
+from utils.auth_ui import render_auth_widget
+
+# Cela affiche le bouton "Déconnexion" si déjà connecté, 
+# ou le formulaire si ce n'est pas le cas.
+user = render_auth_widget()
 # --------------------
 # Configuration & Styles
 # --------------------

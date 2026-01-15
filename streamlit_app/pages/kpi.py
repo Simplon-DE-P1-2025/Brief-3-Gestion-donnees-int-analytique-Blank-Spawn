@@ -3,6 +3,13 @@ from supabase import create_client
 from dotenv import load_dotenv
 import os
 
+
+from utils.auth_ui import render_auth_widget
+
+# Cela affiche le bouton "Déconnexion" si déjà connecté, 
+# ou le formulaire si ce n'est pas le cas.
+user = render_auth_widget()
+
 #-------------------------
 #ENV
 #-------------------------

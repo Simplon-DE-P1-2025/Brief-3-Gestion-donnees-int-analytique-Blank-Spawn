@@ -5,6 +5,12 @@ import json
 import os
 from datetime import datetime
 
+from utils.auth_ui import render_auth_widget
+
+# Cela affiche le bouton "Déconnexion" si déjà connecté, 
+# ou le formulaire si ce n'est pas le cas.
+user = render_auth_widget()
+
 st.title("🔍 Audit des Données – Historique & Qualité")
 
 supabase = get_supabase_client()
