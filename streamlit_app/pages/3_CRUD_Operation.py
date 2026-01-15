@@ -23,35 +23,32 @@ operations = load_operations()
 # ---------------------------------------------------------
 # 2) Affichage du tableau
 # ---------------------------------------------------------
-st.subheader("📋 Liste des opérations")
+st.subheader("📋 Liste des opérations de sauvetage")
 st.dataframe(operations, use_container_width=True)
 
 # ---------------------------------------------------------
-# 3) Ajouter une opération
+# 3) Ajouter une opération (expander)
 # ---------------------------------------------------------
-if st.button("➕ Ajouter une opération"):
-    with st.modal("Ajouter une nouvelle opération"):
-        st.write("Remplissez les informations ci-dessous.")
+with st.expander("➕ Ajouter une nouvelle opération"):
+    operation_id = st.text_input("ID de l'opération (clé primaire)")
+    type_operation = st.text_input("Type d'opération")
+    departement = st.text_input("Département")
+    evenement = st.text_input("Événement")
+    latitude = st.number_input("Latitude", value=0.0)
+    longitude = st.number_input("Longitude", value=0.0)
 
-        operation_id = st.text_input("ID de l'opération (clé primaire)")
-        type_operation = st.text_input("Type d'opération")
-        departement = st.text_input("Département")
-        evenement = st.text_input("Événement")
-        latitude = st.number_input("Latitude", value=0.0)
-        longitude = st.number_input("Longitude", value=0.0)
-
-        if st.button("Enregistrer"):
-            data = {
-                "operation_id": operation_id,
-                "type_operation": type_operation,
-                "departement": departement,
-                "evenement": evenement,
-                "latitude": latitude,
-                "longitude": longitude,
-            }
-            supabase.table("operation").insert(data).execute()
-            st.success("Opération ajoutée avec succès")
-            st.rerun()
+    if st.button("Enregistrer l'opération", key="save_new"):
+        data = {
+            "operation_id": operation_id,
+            "type_operation": type_operation,
+            "departement": departement,
+            "evenement": evenement,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
+        supabase.table("operation").insert(data).execute()
+        st.success("Opération ajoutée avec succès")
+        st.rerun()
 
 # ---------------------------------------------------------
 # 4) Modifier une opération
@@ -64,35 +61,34 @@ selected_id = st.selectbox("Sélectionnez une opération à modifier", operation
 if selected_id:
     op = next(o for o in operations if o["operation_id"] == selected_id)
 
-    if st.button("Modifier"):
-        with st.modal(f"Modifier l'opération {selected_id}"):
+    with st.expander(f"Modifier l'opération {selected_id}"):
 
-            type_operation = st.text_input("Type d'opération", value=op.get("type_operation", ""))
-            departement = st.text_input("Département", value=op.get("departement", ""))
-            evenement = st.text_input("Événement", value=op.get("evenement", ""))
-            latitude = st.number_input("Latitude", value=op.get("latitude", 0.0))
-            longitude = st.number_input("Longitude", value=op.get("longitude", 0.0))
+        type_operation = st.text_input("Type d'opération", value=op.get("type_operation", ""))
+        departement = st.text_input("Département", value=op.get("departement", ""))
+        evenement = st.text_input("Événement", value=op.get("evenement", ""))
+        latitude = st.number_input("Latitude", value=op.get("latitude", 0.0))
+        longitude = st.number_input("Longitude", value=op.get("longitude", 0.0))
 
-            if st.button("Enregistrer les modifications"):
-                data = {
-                    "type_operation": type_operation,
-                    "departement": departement,
-                    "evenement": evenement,
-                    "latitude": latitude,
-                    "longitude": longitude,
-                }
-                supabase.table("operation").update(data).eq("operation_id", selected_id).execute()
-                st.success("Opération mise à jour")
-                st.rerun()
+        if st.button("Enregistrer les modifications", key="save_edit"):
+            data = {
+                "type_operation": type_operation,
+                "departement": departement,
+                "evenement": evenement,
+                "latitude": latitude,
+                "longitude": longitude,
+            }
+            supabase.table("operation").update(data).eq("operation_id", selected_id).execute()
+            st.success("Opération mise à jour")
+            st.rerun()
 
 # ---------------------------------------------------------
 # 5) Supprimer une opération
 # ---------------------------------------------------------
 st.subheader("🗑️ Supprimer une opération")
 
-delete_id = st.selectbox("Sélectionnez une opération à supprimer", operation_ids, key="delete")
+delete_id = st.selectbox("Sélectionnez une opération à supprimer", operation_ids, key="delete_select")
 
-if st.button("Supprimer définitivement"):
+if st.button("Supprimer définitivement", key="delete_button"):
     supabase.table("operation").delete().eq("operation_id", delete_id).execute()
     st.warning(f"Opération {delete_id} supprimée")
     st.rerun()
