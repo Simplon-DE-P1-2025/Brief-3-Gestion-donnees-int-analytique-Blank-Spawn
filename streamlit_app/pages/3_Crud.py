@@ -11,7 +11,6 @@ from utils.auth_ui import render_auth_widget
 st.set_page_config(page_title="CRUD Pro - Supabase", layout="wide")
 
 # 1. AUTHENTIFICATION
-# On affiche le widget. S'il n'est pas connecté, user sera None.
 user = render_auth_widget()
 
 # --------------------
@@ -35,12 +34,17 @@ def log_action(table_name, action, record_id, details):
             print(f"Erreur de log : {e}")
 
 def sanitize_dict(d: dict) -> dict:
+    """Nettoie le dictionnaire pour éviter les faux positifs lors de la comparaison."""
     clean_dict = {}
     for k, v in d.items():
         if k == "🗑️ Supprimer": continue
-        if pd.isna(v) or v == "None" or v == "": continue
+        # On traite les valeurs nulles, NaN ou vides comme identiques
+        if pd.isna(v) or v == "None" or v == "": 
+            v = None 
+        
         try:
-            if isinstance(v, (float, str)) and float(v).is_integer():
+            # Conversion propre des types numériques
+            if v is not None and isinstance(v, (float, str)) and float(v).is_integer():
                 clean_dict[k] = int(float(v))
             else:
                 clean_dict[k] = v
@@ -60,15 +64,14 @@ AUTO_COLUMNS = ["flotteur_id", "resultat_id"]
 
 st.title("🎛️ Gestion des Données (CRUD)")
 
-# Message d'information si non connecté
 if not user:
-    st.info("💡 Vous êtes en mode **Lecture seule**. Connectez-vous via la barre latérale pour modifier les données.")
+    st.info("💡 Mode Lecture seule. Connectez-vous pour modifier.")
 
 selected_table = st.selectbox("Table active :", options=list(TABLE_KEYS.keys()))
 pk = TABLE_KEYS[selected_table]
 
 # --------------------
-# Chargement des données (Accessible à tous)
+# Chargement des données
 # --------------------
 try:
     raw_data = fetch_data(selected_table, order_by=pk[0])
@@ -115,9 +118,8 @@ with st.expander(f"➕ Ajouter une ligne dans {selected_table}", expanded=False)
 
         submitted = st.form_submit_button("Enregistrer")
         if submitted:
-            # VERIFICATION AUTH
             if not user:
-                st.error("🚫 Action refusée : Vous devez être connecté pour ajouter des données.")
+                st.error("🚫 Connectez-vous pour ajouter.")
             else:
                 if selected_table == "operation":
                     new_row_data["operation_id"] = f"OP-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
@@ -146,9 +148,8 @@ for k in pk:
 edited_df = st.data_editor(df_editor, num_rows="fixed", width="stretch", column_config=column_cfg, key=f"editor_{selected_table}")
 
 if st.button("💾 Appliquer les changements", type="primary"):
-    # VERIFICATION AUTH
     if not user:
-        st.error("🚫 Action refusée : Vous devez être connecté pour modifier ou supprimer des données.")
+        st.error("🚫 Connectez-vous pour modifier.")
     else:
         original = st.session_state[f"original_{selected_table}"]
         rows_to_delete = edited_df[edited_df["🗑️ Supprimer"] == True]
@@ -163,22 +164,33 @@ if st.button("💾 Appliquer les changements", type="primary"):
                     log_action(selected_table, "DELETE", row_pk[pk[0]], sanitize_dict(row.to_dict()))
                 st.toast(f"🗑️ {len(rows_to_delete)} ligne(s) supprimée(s)", icon="✅")
 
-            # B. MISES À JOUR
+            # B. MISES À JOUR (Logique améliorée)
             common_idx = edited_clean.index.intersection(original.index)
-            changed_mask = (edited_clean.loc[common_idx] != original.loc[common_idx]).any(axis=1)
-            changed_indices = common_idx[changed_mask]
+            change_count = 0
             
-            if not changed_indices.empty:
-                for idx in changed_indices:
-                    full_row = sanitize_dict(edited_clean.loc[idx].to_dict())
-                    row_pk = {k: full_row[k] for k in pk}
-                    data_update = {k: v for k, v in full_row.items() if k not in pk}
-                    update_row(selected_table, row_id=row_pk, data=data_update, id_column=pk)
-                    log_action(selected_table, "UPDATE", row_pk[pk[0]], data_update)
-                st.toast(f"✏️ {len(changed_indices)} ligne(s) modifiée(s)", icon="✅")
+            if not common_idx.empty:
+                for idx in common_idx:
+                    dict_original = sanitize_dict(original.loc[idx].to_dict())
+                    dict_edited = sanitize_dict(edited_clean.loc[idx].to_dict())
+                    
+                    if dict_original != dict_edited:
+                        # On identifie les champs qui ont réellement changé
+                        diff = {k: v for k, v in dict_edited.items() if v != dict_original.get(k)}
+                        
+                        if diff:
+                            row_pk = {k: dict_edited[k] for k in pk}
+                            data_update = {k: v for k, v in dict_edited.items() if k not in pk}
+                            
+                            update_row(selected_table, row_id=row_pk, data=data_update, id_column=pk)
+                            log_action(selected_table, "UPDATE", row_pk[pk[0]], diff)
+                            change_count += 1
 
-            if not (rows_to_delete.empty and changed_indices.empty):
+            if change_count > 0 or not rows_to_delete.empty:
+                st.toast(f"✏️ {change_count} ligne(s) modifiée(s)", icon="✅")
                 st.session_state[f"original_{selected_table}"] = edited_clean.copy()
                 st.rerun()
+            else:
+                st.info("Aucun changement réel détecté.")
+                
         except Exception as e:
             st.error(f"Erreur : {e}")
