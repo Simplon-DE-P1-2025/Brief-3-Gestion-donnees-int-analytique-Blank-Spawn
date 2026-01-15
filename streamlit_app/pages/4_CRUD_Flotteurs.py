@@ -13,7 +13,6 @@ def load_flotteurs():
         supabase
         .table("flotteurs")
         .select("*")
-        .order("flotteur_id", desc=False)
         .execute()
     )
     return response.data
@@ -30,17 +29,23 @@ st.dataframe(flotteurs, use_container_width=True)
 # 3) Ajouter un flotteur
 # ---------------------------------------------------------
 with st.expander("➕ Ajouter un nouveau flotteur"):
-    flotteur_id = st.text_input("ID du flotteur (clé primaire)")
+    numero_ordre = st.number_input("Numéro d'ordre", min_value=0)
+    pavillon = st.text_input("Pavillon")
+    operation_id = st.text_input("ID de l'opération liée")
     type_flotteur = st.text_input("Type de flotteur")
-    statut = st.text_input("Statut")
-    localisation = st.text_input("Localisation")
+    categorie_flotteur = st.text_input("Catégorie de flotteur")
+    numero_immatriculation = st.text_input("Numéro d'immatriculation")
+    resultat_flotteur = st.text_input("Résultat du flotteur")
 
     if st.button("Enregistrer le flotteur", key="save_new_flotteur"):
         data = {
-            "flotteur_id": flotteur_id,
+            "numero_ordre": numero_ordre,
+            "pavillon": pavillon,
+            "operation_id": operation_id,
             "type_flotteur": type_flotteur,
-            "statut": statut,
-            "localisation": localisation,
+            "categorie_flotteur": categorie_flotteur,
+            "numero_immatriculation": numero_immatriculation,
+            "resultat_flotteur": resultat_flotteur,
         }
         supabase.table("flotteurs").insert(data).execute()
         st.success("Flotteur ajouté avec succès")
@@ -51,25 +56,36 @@ with st.expander("➕ Ajouter un nouveau flotteur"):
 # ---------------------------------------------------------
 st.subheader("✏️ Modifier un flotteur")
 
-flotteur_ids = [f["flotteur_id"] for f in flotteurs]
-selected_id = st.selectbox("Sélectionnez un flotteur", flotteur_ids)
+if len(flotteurs) > 0:
+    index = st.selectbox(
+        "Sélectionnez un flotteur à modifier",
+        list(range(len(flotteurs))),
+        format_func=lambda i: f"{flotteurs[i]['numero_ordre']} – {flotteurs[i]['type_flotteur']}"
+    )
 
-if selected_id:
-    f = next(x for x in flotteurs if x["flotteur_id"] == selected_id)
+    f = flotteurs[index]
 
-    with st.expander(f"Modifier le flotteur {selected_id}"):
+    with st.expander(f"Modifier le flotteur {f['numero_ordre']}"):
 
+        numero_ordre = st.number_input("Numéro d'ordre", value=f.get("numero_ordre", 0))
+        pavillon = st.text_input("Pavillon", value=f.get("pavillon", ""))
+        operation_id = st.text_input("ID opération", value=f.get("operation_id", ""))
         type_flotteur = st.text_input("Type", value=f.get("type_flotteur", ""))
-        statut = st.text_input("Statut", value=f.get("statut", ""))
-        localisation = st.text_input("Localisation", value=f.get("localisation", ""))
+        categorie_flotteur = st.text_input("Catégorie", value=f.get("categorie_flotteur", ""))
+        numero_immatriculation = st.text_input("Numéro d'immatriculation", value=f.get("numero_immatriculation", ""))
+        resultat_flotteur = st.text_input("Résultat flotteur", value=f.get("resultat_flotteur", ""))
 
         if st.button("Enregistrer les modifications", key="save_edit_flotteur"):
             data = {
+                "numero_ordre": numero_ordre,
+                "pavillon": pavillon,
+                "operation_id": operation_id,
                 "type_flotteur": type_flotteur,
-                "statut": statut,
-                "localisation": localisation,
+                "categorie_flotteur": categorie_flotteur,
+                "numero_immatriculation": numero_immatriculation,
+                "resultat_flotteur": resultat_flotteur,
             }
-            supabase.table("flotteurs").update(data).eq("flotteur_id", selected_id).execute()
+            supabase.table("flotteurs").update(data).match(f).execute()
             st.success("Flotteur mis à jour")
             st.rerun()
 
@@ -78,9 +94,15 @@ if selected_id:
 # ---------------------------------------------------------
 st.subheader("🗑️ Supprimer un flotteur")
 
-delete_id = st.selectbox("Sélectionnez un flotteur à supprimer", flotteur_ids, key="delete_flotteur")
+if len(flotteurs) > 0:
+    delete_index = st.selectbox(
+        "Sélectionnez un flotteur à supprimer",
+        list(range(len(flotteurs))),
+        key="delete_flotteur",
+        format_func=lambda i: f"{flotteurs[i]['numero_ordre']} – {flotteurs[i]['type_flotteur']}"
+    )
 
-if st.button("Supprimer définitivement", key="delete_button_flotteur"):
-    supabase.table("flotteurs").delete().eq("flotteur_id", delete_id).execute()
-    st.warning(f"Flotteur {delete_id} supprimé")
-    st.rerun()
+    if st.button("Supprimer définitivement", key="delete_button_flotteur"):
+        supabase.table("flotteurs").delete().match(flotteurs[delete_index]).execute()
+        st.warning("Flotteur supprimé")
+        st.rerun()

@@ -13,7 +13,6 @@ def load_resultats():
         supabase
         .table("resultats_humain")
         .select("*")
-        .order("resultat_id", desc=False)
         .execute()
     )
     return response.data
@@ -30,19 +29,19 @@ st.dataframe(resultats, use_container_width=True)
 # 3) Ajouter un résultat
 # ---------------------------------------------------------
 with st.expander("➕ Ajouter un résultat humain"):
-    resultat_id = st.text_input("ID du résultat (clé primaire)")
+    nombre = st.number_input("Nombre total de personnes", min_value=0)
+    dont_blesses = st.number_input("Dont blessés", min_value=0)
     operation_id = st.text_input("ID de l'opération liée")
-    nb_sauves = st.number_input("Nombre de personnes sauvées", min_value=0)
-    nb_decedes = st.number_input("Nombre de personnes décédées", min_value=0)
-    commentaire = st.text_area("Commentaire")
+    categorie = st.text_input("Catégorie de personne")
+    resultat = st.text_input("Résultat humain")
 
     if st.button("Enregistrer le résultat", key="save_new_resultat"):
         data = {
-            "resultat_id": resultat_id,
+            "nombre": nombre,
+            "dont_nombre_blesse": dont_blesses,
             "operation_id": operation_id,
-            "nb_sauves": nb_sauves,
-            "nb_decedes": nb_decedes,
-            "commentaire": commentaire,
+            "categorie_personne": categorie,
+            "resultat_humain": resultat,
         }
         supabase.table("resultats_humain").insert(data).execute()
         st.success("Résultat ajouté avec succès")
@@ -53,27 +52,33 @@ with st.expander("➕ Ajouter un résultat humain"):
 # ---------------------------------------------------------
 st.subheader("✏️ Modifier un résultat")
 
-resultat_ids = [r["resultat_id"] for r in resultats]
-selected_id = st.selectbox("Sélectionnez un résultat", resultat_ids)
+if len(resultats) > 0:
+    index = st.selectbox(
+        "Sélectionnez un résultat à modifier",
+        list(range(len(resultats))),
+        format_func=lambda i: f"{resultats[i]['operation_id']} – {resultats[i]['categorie_personne']}"
+    )
 
-if selected_id:
-    r = next(x for x in resultats if x["resultat_id"] == selected_id)
+    r = resultats[index]
 
-    with st.expander(f"Modifier le résultat {selected_id}"):
+    with st.expander("Modifier ce résultat"):
 
+        nombre = st.number_input("Nombre total", value=r.get("nombre", 0))
+        dont_blesses = st.number_input("Dont blessés", value=r.get("dont_nombre_blesse", 0))
         operation_id = st.text_input("ID opération", value=r.get("operation_id", ""))
-        nb_sauves = st.number_input("Sauvés", value=r.get("nb_sauves", 0))
-        nb_decedes = st.number_input("Décédés", value=r.get("nb_decedes", 0))
-        commentaire = st.text_area("Commentaire", value=r.get("commentaire", ""))
+        categorie = st.text_input("Catégorie", value=r.get("categorie_personne", ""))
+        resultat = st.text_input("Résultat humain", value=r.get("resultat_humain", ""))
 
         if st.button("Enregistrer les modifications", key="save_edit_resultat"):
             data = {
+                "nombre": nombre,
+                "dont_nombre_blesse": dont_blesses,
                 "operation_id": operation_id,
-                "nb_sauves": nb_sauves,
-                "nb_decedes": nb_decedes,
-                "commentaire": commentaire,
+                "categorie_personne": categorie,
+                "resultat_humain": resultat,
             }
-            supabase.table("resultats_humain").update(data).eq("resultat_id", selected_id).execute()
+            # Pas de clé primaire → on utilise un filtre complet
+            supabase.table("resultats_humain").update(data).match(r).execute()
             st.success("Résultat mis à jour")
             st.rerun()
 
@@ -82,9 +87,15 @@ if selected_id:
 # ---------------------------------------------------------
 st.subheader("🗑️ Supprimer un résultat")
 
-delete_id = st.selectbox("Sélectionnez un résultat à supprimer", resultat_ids, key="delete_resultat")
+if len(resultats) > 0:
+    delete_index = st.selectbox(
+        "Sélectionnez un résultat à supprimer",
+        list(range(len(resultats))),
+        key="delete_resultat",
+        format_func=lambda i: f"{resultats[i]['operation_id']} – {resultats[i]['categorie_personne']}"
+    )
 
-if st.button("Supprimer définitivement", key="delete_button_resultat"):
-    supabase.table("resultats_humain").delete().eq("resultat_id", delete_id).execute()
-    st.warning(f"Résultat {delete_id} supprimé")
-    st.rerun()
+    if st.button("Supprimer définitivement", key="delete_button_resultat"):
+        supabase.table("resultats_humain").delete().match(resultats[delete_index]).execute()
+        st.warning("Résultat supprimé")
+        st.rerun()
